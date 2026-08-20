@@ -1,0 +1,405 @@
+/* 一战兵棋推演 —— 全局样式 */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+  background: #141a26; /* 深色背景，突出画布 */
+  color: #e8eaf0;
+  overflow: hidden;
+}
+
+/* 顶栏 */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: #1b2333;
+  border-bottom: 1px solid #2a3450;
+}
+.topbar h1 { font-size: 18px; font-weight: 600; }
+.topbar .stage { font-size: 13px; color: #8b93a7; font-weight: 400; }
+.controls { display: flex; align-items: center; gap: 12px; }
+.controls .hint { font-size: 12px; color: #8b93a7; }
+
+/* 回合指示 + 结束回合按钮 */
+.turn { font-size: 14px; font-weight: 700; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.06); }
+.btn {
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8eaf0;
+  background: #2a3450;
+  border: 1px solid #3a4a75;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn:hover { background: #35456e; }
+.btn:active { background: #1f2740; }
+
+/* 主区域：左侧画布区 + 右侧战斗日志 */
+.stage {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 96px); /* 顶栏 + 图例占位 */
+  display: flex;
+  align-items: stretch;
+}
+
+.board-area {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 40%, #1a2130 0%, #12161f 100%);
+  min-width: 0;
+}
+
+#mapCanvas {
+  cursor: grab;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+}
+#mapCanvas.dragging { cursor: grabbing; }
+
+/* 战斗结果提示条（画布上方居中，短暂显示） */
+.combat-log {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 86%;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: #ffe9a8;
+  background: rgba(20, 26, 38, 0.92);
+  border: 1px solid #5a4a1f;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+  text-align: center;
+}
+.combat-log.show { opacity: 1; }
+
+/* 资金面板（左上法国 / 右上德国） */
+.gold-panel {
+  position: absolute;
+  top: 14px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  background: rgba(18, 24, 38, 0.9);
+  border: 1px solid #2a3450;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  user-select: none;
+}
+.gold-fr { left: 16px; }
+.gold-de { right: 16px; }
+.gp-name { font-size: 12px; color: #aab2c5; }
+.gold-fr .gp-name { color: #7ea3ff; }
+.gold-de .gp-name { color: #ff9a8a; }
+.gp-gold { font-size: 18px; color: #ffd76a; }
+.gp-income { font-size: 12px; color: #6fdc8c; font-weight: 600; }
+
+/* 部署图标栏（资金面板下方居中）：选兵种 → 城市高亮部署 */
+.deploy-bar {
+  position: absolute;
+  top: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(18, 24, 38, 0.9);
+  border: 1px solid #2a3450;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+}
+.deploy-hint { color: #8b93a7; }
+.deploy-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; padding: 5px 10px; }
+.deploy-btn i { font-style: normal; color: #ffd76a; font-weight: 700; }
+.deploy-btn.active {
+  background: #3a4a75;
+  border-color: #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.35);
+}
+
+/* 掷骰面板（部署栏下方，战斗时显示） */
+.dice-panel {
+  position: absolute;
+  top: 96px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 22px;
+  background: rgba(14, 19, 32, 0.95);
+  border: 1px solid #3a4a75;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  user-select: none;
+}
+.dice-panel.hidden { display: none; }
+.dice-side { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 74px; }
+.dice-label { font-size: 12px; font-weight: 600; }
+.dice-fr .dice-label { color: #7ea3ff; }
+.dice-de .dice-label { color: #ff9a8a; }
+.dice-num {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1.1;
+  min-width: 56px;
+  text-align: center;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+}
+.dice-fr .dice-num { color: #7ea3ff; }
+.dice-de .dice-num { color: #ff9a8a; }
+.dice-mod { font-size: 13px; font-weight: 700; min-height: 18px; color: #ffd76a; }
+.dice-vs { font-size: 20px; color: #8b93a7; }
+/* 战斗结果标签（骰子面板右侧） */
+.dice-result {
+  margin-left: 10px;
+  padding: 8px 14px;
+  font-size: 20px;
+  font-weight: 800;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+.dice-result.r-kill      { color: #ff9a8a; background: rgba(229, 72, 77, 0.18); border: 1px solid #e5484d; }
+.dice-result.r-retreat   { color: #ffd76a; background: rgba(255, 215, 0, 0.12); border: 1px solid #a8840a; }
+.dice-result.r-confused  { color: #c9a0ff; background: rgba(160, 100, 255, 0.14); border: 1px solid #8b5cf6; }
+.dice-result.r-miss      { color: #9aa5bd; background: rgba(140, 150, 180, 0.12); border: 1px solid #5a6480; }
+
+/* 兵种介绍面板（战斗日志下方，正常流） */
+.battle-log-guide {
+  flex: 0 0 auto;
+  padding: 10px 12px 12px;
+  border-top: 1px solid #2a3450;
+  font-size: 12px;
+  user-select: none;
+}
+.ug-title { font-size: 12px; font-weight: 700; color: #ffd76a; margin-bottom: 8px; }
+.ug-item { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-top: 1px solid #232c44; }
+.ug-item:first-of-type { border-top: none; }
+.ug-icon { font-size: 18px; line-height: 1.2; }
+.ug-body { flex: 1; }
+.ug-body b { color: #e8eaf0; margin-right: 6px; }
+.ug-stat { display: block; color: #aab2c5; margin: 2px 0; }
+.ug-stat i { font-style: normal; color: #ffd76a; font-weight: 700; }
+.ug-body small { color: #7d8aa8; line-height: 1.45; display: block; }
+
+/* 角落小按钮（左下规则 / 右下详细设定） */
+.btn-corner {
+  position: absolute;
+  z-index: 6;
+  font-size: 11px;
+  padding: 3px 10px;
+  opacity: 0.75;
+  transition: opacity 0.15s;
+}
+.btn-corner:hover { opacity: 1; }
+.btn-corner-bl { left: 16px; bottom: 16px; }
+.btn-corner-br { right: 16px; bottom: 16px; }
+
+/* 模态（开屏提示 / 规则 / 详细设定） */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 9, 16, 0.72);
+}
+.modal-overlay.hidden { display: none; }
+.modal {
+  width: min(700px, 92vw);
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: #161d2c;
+  border: 1px solid #3a4a75;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid #2a3450;
+}
+.modal-title { font-size: 17px; font-weight: 700; color: #ffd76a; }
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 22px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: #dde3ef;
+}
+.modal-body::-webkit-scrollbar { width: 8px; }
+.modal-body::-webkit-scrollbar-thumb { background: #2a3450; border-radius: 4px; }
+.modal-body h4 { color: #7ea3ff; margin: 12px 0 4px; font-size: 13px; }
+.modal-body p { margin: 6px 0; }
+.modal-body ul, .modal-body ol { margin: 6px 0; padding-left: 22px; }
+.modal-body b { color: #ffd76a; }
+.modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid #2a3450;
+}
+
+/* 模式选择（开屏模态内） */
+.modal-pick {
+  padding: 12px 18px;
+  border-top: 1px solid #2a3450;
+  font-size: 13px;
+}
+.pick-title { color: #aab2c5; margin-bottom: 8px; font-size: 12px; }
+.pick-row { display: flex; align-items: center; gap: 16px; margin-bottom: 6px; }
+.pick-label { color: #8b93a7; font-size: 12px; }
+.pick-opt { display: inline-flex; align-items: center; gap: 5px; color: #dde3ef; cursor: pointer; }
+.pick-opt input { accent-color: #ffd700; }
+.pick-desc { margin-top: 2px; }
+.pick-desc-text { color: #7d8aa8; font-size: 12px; }
+
+/* 顶栏模式标签 */
+.mode-label {
+  font-size: 12px;
+  color: #6fdc8c;
+  padding: 3px 8px;
+  border: 1px solid #2a5a3a;
+  border-radius: 6px;
+  background: rgba(40, 90, 60, 0.25);
+}
+
+/* 胜利界面 */
+.victory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 9, 16, 0.8);
+  animation: fadeIn 0.5s ease;
+}
+.victory-overlay.hidden { display: none; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.victory-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 44px 64px;
+  background: radial-gradient(circle at 50% 30%, #1d2740, #121826);
+  border: 2px solid #ffd700;
+  border-radius: 18px;
+  box-shadow: 0 0 60px rgba(255, 215, 0, 0.25);
+  text-align: center;
+}
+.victory-badge { font-size: 64px; animation: bounce 1.2s ease infinite; }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.victory-title { font-size: 40px; font-weight: 800; color: #ffd76a; }
+.victory-sub { font-size: 16px; color: #aab2c5; }
+.victory-box .btn { font-size: 15px; padding: 10px 32px; margin-top: 8px; }
+
+/* 右侧战斗日志面板 */
+.battle-log {
+  width: 280px;
+  min-width: 240px;
+  display: flex;
+  flex-direction: column;
+  background: #161d2c;
+  border-left: 1px solid #2a3450;
+}
+.battle-log-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #2a3450;
+}
+.battle-log-title { font-size: 13px; font-weight: 700; color: #ffd76a; }
+.btn-mini { padding: 2px 8px; font-size: 11px; }
+.battle-log-body {
+  flex: 0 1 55%;
+  min-height: 90px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  color: #aab2c5;
+}
+.battle-log-body::-webkit-scrollbar { width: 8px; }
+.battle-log-body::-webkit-scrollbar-thumb { background: #2a3450; border-radius: 4px; }
+.battle-log-empty { color: #5a6480; text-align: center; padding: 20px 0; }
+.log-entry {
+  padding: 8px 10px;
+  background: #1d2537;
+  border: 1px solid #2a3450;
+  border-radius: 6px;
+  line-height: 1.55;
+}
+.log-entry .log-meta { font-size: 11px; color: #7d8aa8; margin-bottom: 2px; }
+.log-entry .log-line { color: #dde3ef; }
+.log-entry.log-kill .log-line { color: #ff9a8a; }
+.log-entry.log-retreat .log-line { color: #ffd76a; }
+.log-entry.log-confused .log-line { color: #c9a0ff; }
+.log-entry.log-miss .log-line { color: #9aa5bd; }
+
+/* 图例 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 20px;
+  background: #1b2333;
+  border-top: 1px solid #2a3450;
+  font-size: 12px;
+  color: #aab2c5;
+}
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend .income { color: #ffd76a; font-weight: 600; }
+
+/* 图例色块 */
+.sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.sw.plain    { background: #c8d6a5; }
+.sw.forest   { background: #2f6b31; }
+.sw.mountain { background: #8d8274; }
+.sw.river    { background: #4a90d9; }
+.sw.city.fr  { background: #3b6fd4; }
+.sw.city.de  { background: #d4574a; }

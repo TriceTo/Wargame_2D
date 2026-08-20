@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>一战兵棋推演 - 地图</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>一战兵棋推演 <span class="stage">· 移动系统（阶段 4/8）</span></h1>
+    <div class="controls">
+      <span class="hint">点击己方单位选中 · 点击金色高亮格移动 · 滚轮缩放 · 拖拽平移</span>
+      <span id="modeLabel" class="mode-label"></span>
+      <span id="turnLabel" class="turn"></span>
+      <button id="endTurnBtn" class="btn">结束回合</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="board-area">
+      <!-- 左下角：规则按钮 / 右下角：详细设定按钮（小按钮） -->
+      <button id="ruleBtn" class="btn btn-corner btn-corner-bl" title="查看游戏规则">规则</button>
+      <button id="detailBtn" class="btn btn-corner btn-corner-br" title="查看详细设定（兵棋游戏设想）">详细设定</button>
+
+      <!-- 左上：法国资金 / 右上：德国资金（相对画布区域，不遮挡日志栏） -->
+      <div class="gold-panel gold-fr">
+        <span class="gp-name">法国</span>
+        <span class="gp-gold" id="goldFr">80</span>
+        <span class="gp-income" id="incomeFr">+80</span>
+      </div>
+      <div class="gold-panel gold-de">
+        <span class="gp-name">德国</span>
+        <span class="gp-gold" id="goldDe">20</span>
+        <span class="gp-income" id="incomeDe">+80</span>
+      </div>
+
+      <!-- 部署图标栏（资金面板下方）：点击选兵种 → 城市黄色条纹高亮 → 点击部署 -->
+      <div class="deploy-bar">
+        <span class="deploy-hint">部署：</span>
+        <button class="btn deploy-btn" data-type="infantry" title="步兵 造价20">🪖 步兵 <i>20</i></button>
+        <button class="btn deploy-btn" data-type="artillery" title="炮兵 造价30">💥 炮兵 <i>30</i></button>
+        <button class="btn deploy-btn" data-type="tank" title="坦克 造价35">🛡 坦克 <i>35</i></button>
+      </div>
+
+      <!-- 掷骰面板（部署栏下方，战斗时显示：左攻右守，数字跳动后定格 + 修正） -->
+      <div id="dicePanel" class="dice-panel hidden">
+        <div class="dice-side dice-fr">
+          <span class="dice-label">法国</span>
+          <span class="dice-num" id="diceFr">6</span>
+          <span class="dice-mod" id="diceFrMod"></span>
+        </div>
+        <div class="dice-vs">⚔</div>
+        <div class="dice-side dice-de">
+          <span class="dice-label">德国</span>
+          <span class="dice-num" id="diceDe">6</span>
+          <span class="dice-mod" id="diceDeMod"></span>
+        </div>
+        <div class="dice-result" id="diceResult"></div>
+      </div>
+
+      <!-- 主画布：六边形地图 + 单位 -->
+      <canvas id="mapCanvas"></canvas>
+      <!-- 战斗结果提示条（短暂显示最新一次） -->
+      <div id="combatLog" class="combat-log"></div>
+    </div>
+
+    <!-- 右侧：战斗日志（上方，缩短）+ 兵种介绍（下方） -->
+    <aside class="battle-log">      <div class="battle-log-head">
+        <span class="battle-log-title">⚔ 战斗日志</span>
+        <button id="clearLogBtn" class="btn btn-mini">清空</button>
+      </div>
+      <div class="battle-log-body" id="battleLogBody">
+        <div class="battle-log-empty">暂无战斗记录</div>
+      </div>
+      <div class="battle-log-guide">
+        <div class="ug-title">📖 兵种介绍</div>
+        <div class="ug-item">
+          <canvas class="ug-icon" data-type="infantry" width="26" height="26"></canvas>
+          <div class="ug-body">
+            <b>步兵</b>
+            <span class="ug-stat">行动力 <i data-type="infantry"></i> · 造价 <i data-type="infantry" data-cost></i></span>
+            <small>山地消耗 1.5；守城防御额外 +1</small>
+          </div>
+        </div>
+        <div class="ug-item">
+          <canvas class="ug-icon" data-type="artillery" width="26" height="26"></canvas>
+          <div class="ug-body">
+            <b>炮兵</b>
+            <span class="ug-stat">行动力 <i data-type="artillery"></i> · 造价 <i data-type="artillery" data-cost></i></span>
+            <small>攻击城市单位 +2；消灭后不前进</small>
+          </div>
+        </div>
+        <div class="ug-item">
+          <canvas class="ug-icon" data-type="tank" width="26" height="26"></canvas>
+          <div class="ug-body">
+            <b>坦克</b>
+            <span class="ug-stat">行动力 <i data-type="tank"></i> · 造价 <i data-type="tank" data-cost></i></span>
+            <small>攻击步兵/坦克 +1；攻击后可移动</small>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="legend">
+    <span class="legend-item"><i class="sw plain"></i>平原</span>
+    <span class="legend-item"><i class="sw forest"></i>森林</span>
+    <span class="legend-item"><i class="sw mountain"></i>山地</span>
+    <span class="legend-item"><i class="sw river"></i>河流(不可站)</span>
+    <span class="legend-item"><i class="sw city fr"></i>法国</span>
+    <span class="legend-item"><i class="sw city de"></i>德国</span>
+    <span class="legend-item">单位圆圈下数字 = 剩余行动力</span>
+    <span class="legend-item">城市：地块色=阵营，形状=等级（<b>圆</b>1 · <b>方</b>2 · <b>★</b>3）</span>
+    <span class="legend-item income" id="incomeLabel"></span>
+  </footer>
+
+  <!-- 模态：开屏规则提示 / 规则 / 详细设定 共用 -->
+  <div id="modalOverlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="modal-title" id="modalTitle">游戏规则</span>
+        <button id="modalClose" class="btn btn-mini" title="关闭">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-pick" id="modalPick">
+        <div class="pick-title">选择模式</div>
+        <div class="pick-row">
+          <label class="pick-opt"><input type="radio" name="mode" value="pvp" checked> 双人对战</label>
+          <label class="pick-opt"><input type="radio" name="mode" value="pve"> 对战 AI</label>
+        </div>
+        <div class="pick-row pick-side hidden" id="pickSide">
+          <span class="pick-label">我用：</span>
+          <label class="pick-opt"><input type="radio" name="side" value="fr" checked> 🇫🇷 法国</label>
+          <label class="pick-opt"><input type="radio" name="side" value="de"> 🇩🇪 德国</label>
+        </div>
+        <div class="pick-row pick-side hidden" id="pickDiff">
+          <span class="pick-label">AI 难度：</span>
+          <label class="pick-opt"><input type="radio" name="diff" value="normal" checked> 普通</label>
+          <label class="pick-opt"><input type="radio" name="diff" value="smart"> 正常</label>
+          <label class="pick-opt"><input type="radio" name="diff" value="hard"> 困难</label>
+        </div>
+        <div class="pick-desc pick-side hidden" id="pickDiffDesc">
+          <span class="pick-label">难度说明：</span>
+          <span id="diffDescText" class="pick-desc-text">普通：只会朝你走、能打就打</span>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button id="modalOk" class="btn">开始游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 胜利界面 -->
+  <div id="victoryOverlay" class="victory-overlay hidden">
+    <div class="victory-box">
+      <div class="victory-badge" id="victoryBadge">🏆</div>
+      <div class="victory-title" id="victoryTitle">法国获胜！</div>
+      <div class="victory-sub">已占领敌方全部城市</div>
+      <button id="victoryRestart" class="btn">再来一局</button>
+    </div>
+  </div>
+
+  <!-- 普通 script 标签（非 module），双击 file:// 可直接打开 -->
+  <script src="js/map.js"></script>
+  <script src="js/units.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/help.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
